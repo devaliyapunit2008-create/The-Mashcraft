@@ -6,7 +6,7 @@ import { onAuthStateChanged, User, signOut } from "firebase/auth";
 import { collection, query, onSnapshot, orderBy, Timestamp, doc, getDoc, updateDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Terminal, Send, LogOut, Cpu, Users, Plus, Shield, Zap, Target } from "lucide-react";
+import { Terminal, Send, LogOut, Cpu, Users, Plus, Shield, Zap, Target, Maximize2, X } from "lucide-react";
 import MermaidChart from "@/components/MermaidChart";
 import { getUserTeams, Team, getTeamMembers, TeamMember, addMemberToTeam, createTeam } from "@/lib/teams";
 import TeamModal from "@/components/TeamModal";
@@ -38,6 +38,7 @@ export default function Dashboard() {
 
     // Operative Modal State
     const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
+    const [expandedChart, setExpandedChart] = useState<string | null>(null);
 
     const router = useRouter();
 
@@ -264,7 +265,7 @@ export default function Dashboard() {
                                     value={inputContext}
                                     onChange={(e) => setInputContext(e.target.value)}
                                     className="w-full bg-black border border-white/10 rounded-lg p-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all min-h-[100px] resize-y"
-                                    placeholder="Describe the mission objective or GitHub repository to analyze..."
+                                    placeholder="Describe the mission objective"
                                 />
                                 <button
                                     type="submit"
@@ -301,10 +302,10 @@ export default function Dashboard() {
 
                                     {/* Project Content */}
                                     {project.status === "completed" && project.output && (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-white/10">
+                                        <div className="grid grid-cols-1 gap-px bg-white/10">
                                             {/* Story Card */}
                                             <div className="bg-black/90 p-6 space-y-4">
-                                                <h3 className="text-secondary font-bold flex items-center gap-2"><Zap className="w-4 h-4" /> THE_PITCH</h3>
+                                                <h3 className="text-white font-black text-lg tracking-wider flex items-center gap-2"><Zap className="w-5 h-5 text-primary" /> THE_STORY</h3>
                                                 <div className="text-xs leading-relaxed text-muted-foreground/80 space-y-2">
                                                     {typeof project.output.story === "string" ? project.output.story : (
                                                         <>
@@ -317,25 +318,98 @@ export default function Dashboard() {
                                             </div>
 
                                             {/* Diagram Card */}
-                                            <div className="bg-black/90 p-6 space-y-4 md:col-span-1 lg:col-span-1 border-r border-white/5">
-                                                <h3 className="text-secondary font-bold flex items-center gap-2"><Cpu className="w-4 h-4" /> ARCHITECTURE</h3>
-                                                <div className="h-48 overflow-hidden rounded border border-white/10 p-2 bg-[#0d1117]">
+                                            <div className="bg-black/90 p-6 space-y-4 border-t border-white/10 relative group/chart">
+                                                <div className="flex items-center justify-between">
+                                                    <h3 className="text-white font-black text-lg tracking-wider flex items-center gap-2"><Cpu className="w-5 h-5 text-primary" /> ARCHITECTURE</h3>
+                                                    <button
+                                                        onClick={() => setExpandedChart(project.output.diagram)}
+                                                        className="text-muted-foreground hover:text-white transition-colors"
+                                                        title="Maximize Pattern"
+                                                    >
+                                                        <Maximize2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                                <div className="h-48 overflow-hidden rounded border border-white/10 p-2 bg-[#0d1117] relative">
                                                     <MermaidChart chart={project.output.diagram || "graph TD; A[Client] --> B[Server];"} />
+                                                    <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors pointer-events-none"></div>
                                                 </div>
                                             </div>
 
                                             {/* Quests Card */}
-                                            <div className="bg-black/90 p-6 space-y-4">
-                                                <h3 className="text-secondary font-bold flex items-center gap-2"><Target className="w-4 h-4" /> QUEST_LOG</h3>
-                                                <ul className="space-y-2">
-                                                    {(project.output.game_quests || []).map((q: any, i: number) => (
-                                                        <li key={i} className="flex justify-between items-center text-xs border border-white/5 p-2 rounded hover:bg-white/5 transition-colors cursor-pointer group">
-                                                            <span className="text-muted-foreground group-hover:text-white">{q.title}</span>
-                                                            <span className="text-primary font-mono">{q.xp}XP</span>
-                                                        </li>
-                                                    ))}
-                                                </ul>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-white/10 border-t border-white/10">
+                                                {/* Quest Log (Takes 2/3 space) */}
+                                                <div className="bg-black/90 p-6 space-y-4 md:col-span-2">
+                                                    <h3 className="text-white font-black text-lg tracking-wider flex items-center gap-2"><Target className="w-5 h-5 text-primary" /> QUEST_LOG</h3>
+                                                    <ul className="space-y-2">
+                                                        {(project.output.game_quests || []).map((q: any, i: number) => (
+                                                            <li key={i} className="flex justify-between items-center text-xs border border-white/5 p-2 rounded hover:bg-white/5 transition-colors cursor-pointer group">
+                                                                <span className="text-muted-foreground group-hover:text-white">{q.title}</span>
+                                                                <span className="text-primary font-mono">{q.xp}XP</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+
+                                                {/* Innovation Score (Takes 1/3 space) */}
+                                                <div className="bg-black/90 p-6 space-y-6 flex flex-col justify-center items-center text-center relative overflow-hidden md:border-l border-white/10">
+                                                    <div className="absolute inset-0 bg-primary/5 pointer-events-none"></div>
+
+                                                    {/* Score Circle */}
+                                                    <div className="relative z-10">
+                                                        <h3 className="text-white font-black text-sm tracking-widest mb-4 drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">INNOVATION_SCORE</h3>
+                                                        <div className="w-24 h-24 rounded-full border-4 border-primary/30 flex items-center justify-center relative bg-black shadow-[0_0_30px_rgba(57,255,20,0.2)]">
+                                                            <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin duration-[3s]"></div>
+                                                            <span className="text-3xl font-black text-primary drop-shadow-[0_0_10px_rgba(57,255,20,0.8)]">
+                                                                {project.output.cheat_sheet?.innovation_score || "0"}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Why It Wins */}
+                                                    <div className="relative z-10 space-y-4 max-w-[240px] text-left">
+                                                        <div className="h-px w-full bg-white/10"></div>
+                                                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider text-center">WHY IT WINS</p>
+                                                        <ul className="space-y-2">
+                                                            {Array.isArray(project.output.cheat_sheet?.why_it_wins) ? (
+                                                                project.output.cheat_sheet.why_it_wins.map((reason: string, idx: number) => (
+                                                                    <li key={idx} className="text-xs text-white font-medium leading-tight flex items-start gap-2">
+                                                                        <span className="text-primary mt-0.5">›</span>
+                                                                        <span>{reason}</span>
+                                                                    </li>
+                                                                ))
+                                                            ) : (
+                                                                (project.output.cheat_sheet?.why_it_wins || "N/A").split('. ').map((reason: string, idx: number) => (
+                                                                    reason.trim() && (
+                                                                        <li key={idx} className="text-xs text-white font-medium leading-tight flex items-start gap-2">
+                                                                            <span className="text-primary mt-0.5">›</span>
+                                                                            <span>{reason.endsWith('.') ? reason : reason + '.'}</span>
+                                                                        </li>
+                                                                    )
+                                                                ))
+                                                            )}
+                                                        </ul>
+                                                    </div>
+                                                </div>
                                             </div>
+
+                                            {/* Pitch Script Section */}
+                                            {project.output.pitch_script && Array.isArray(project.output.pitch_script) && (
+                                                <div className="bg-black/90 p-6 space-y-4 border-t border-white/10">
+                                                    <h3 className="text-white font-black text-lg tracking-wider flex items-center gap-2">
+                                                        <Terminal className="w-5 h-5 text-primary" /> PITCH_SCRIPT_PROTOCOL [120s]
+                                                    </h3>
+                                                    <div className="space-y-3 bg-[#0d1117] p-4 rounded border border-white/5 font-mono text-xs md:text-sm">
+                                                        {project.output.pitch_script.map((segment: any, idx: number) => (
+                                                            <div key={idx} className="flex gap-4 group hover:bg-white/5 p-2 rounded transition-colors">
+                                                                <span className="text-primary font-bold shrink-0 w-16 text-right">[{segment.time}]</span>
+                                                                <span className="text-muted-foreground group-hover:text-white transition-colors">
+                                                                    {segment.text}
+                                                                </span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
 
@@ -372,6 +446,44 @@ export default function Dashboard() {
                 onClose={() => setSelectedMember(null)}
                 member={selectedMember}
             />
+
+            {/* EXPANDED CHART MODAL */}
+            <AnimatePresence>
+                {expandedChart && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 bg-black/90 backdrop-blur-md"
+                        onClick={() => setExpandedChart(null)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9 }}
+                            animate={{ scale: 1 }}
+                            exit={{ scale: 0.9 }}
+                            className="bg-[#0d1117] border border-white/20 rounded-xl w-full max-w-6xl h-[80vh] flex flex-col shadow-2xl overflow-hidden relative"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="flex items-center justify-between p-4 border-b border-white/10 bg-black/50">
+                                <h3 className="text-white font-bold flex items-center gap-2">
+                                    <Cpu className="w-5 h-5 text-primary" /> SYSTEM_ARCHITECTURE_VIEW
+                                </h3>
+                                <button
+                                    onClick={() => setExpandedChart(null)}
+                                    className="text-muted-foreground hover:text-red-500 transition-colors"
+                                >
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-auto p-8 bg-[radial-gradient(circle_at_center,#1a1a1a_1px,transparent_1px)] bg-[size:20px_20px]">
+                                <div className="min-w-full min-h-full flex items-center justify-center">
+                                    <MermaidChart chart={expandedChart} />
+                                </div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

@@ -32,8 +32,14 @@ JSON STRUCTURE:
   ],
   "cheat_sheet": {
     "innovation_score": 95,
-    "why_it_wins": "Uses AI for real-time collaboration."
-  }
+    "why_it_wins": ["Uses AI for real-time collaboration.", "Gamified workflow boosts retention.", "Cyberpunk aesthetic reduces fatigue."]
+  },
+  "pitch_script": [
+    { "time": "00:00", "text": "Hook: 30s intro..." },
+    { "time": "00:30", "text": "Problem: 30s deep dive..." },
+    { "time": "01:00", "text": "Solution: 30s reveal..." },
+    { "time": "01:30", "text": "Call to Action: 30s close..." }
+  ]
 }
 `,
     generationConfig: { responseMimeType: "application/json" }
